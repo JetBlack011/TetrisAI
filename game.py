@@ -1,27 +1,93 @@
-import numpy as np 
 import time
-
-class VirtualGrid:
-
-    def __init__(self):
-        self.grid = np.zeroes(20, 10)
-
-        self.aggregateHeight = 0
-        self.completeLines = 0
-        self.holes = 0
-        self.bumpiness = 0
-    
-    def clear_lines:
-        for row in grid:
-            if (row == 1).all():
-                row.fill(0)
-                grid[:row]
+import numpy as np
 
 class Grid:
 
-    def __init__(self):
+    def __init__(self, height_weight, lines_weight, holes_weight, bumpiness_weight):
+        self.grid = np.zeros(20, 10)
+        self.virtual_grid = self.grid
 
+        self.pieces = {
+            "I" : [[1, 1, 1, 1],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0],
+                   [0, 0, 0, 0]],
+
+            "O" : [[1, 1],
+                [1, 1]],
+
+            "S" : [[0, 1, 1],
+                [1, 1, 0]],
+
+            "Z" : [[1, 1, 0],
+                [0, 1, 1]],
+
+            "L" : [[1, 0],
+                [1, 0],
+                [1, 1]],
+
+            "L" : [[0, 1],
+                [0, 1],
+                [1, 1]]
+        }
+
+        self.current_piece = None
+        self.next_piece = None
+
+        # Optimal coefficents (weights) for score calulation
+        self.height_weight = -height_weight
+        self.lines_weight = lines_weight
+        self.holes_weight = -holes_weight
+        self.bumpiness_weight = -bumpiness_weight
+
+    def zeros(self, column):
+        spaces = 0
+        while self.grid[spaces][column] == 0:
+            spaces += 1
+        return spaces
+
+    def height(self, column):
+        return len(self.grid) - self.zeros(column)
+
+    def holes(self, column):
+        column = self.grid[:,column][self.zeros(column)]
+        return len(column) - np.count_nonzero(column)
+
+    ## Calculate heuristic variables of the field
+    def aggregate_height(self):
+        total = 0
+        
+    def score(self):
+        return self.height_weight * self.aggregate_height() + self.lines_weight * self.lines() + self.holes_weight * self.holes() + self.bumpiness_weight * self.bumpiness()
+
+    def __simulate_drop(self, piece, origin, rotation):
+        assert (origin > 0 and origin < 10) or (piece == self.pieces["I"] and origin > 1 and origin < 10)
+        
+        piece = np.copy(piece)
+        for _ in range(rotation):
+            piece = np.rot90(piece)
+
+        active_rows = [2, 3, 4]
+        smallest_drop = 0
+        for row in active_rows:
+            self.height()
+
+    def __best_move(self):
+        best_score    = 0
+        best_origin   = 0
+        best_rotation = 0
+        for origin in range(10):
+            for rotation in range(4):
+                score = self.__simulate_drop(self.current_piece, origin, rotation)
+                if score > best_score:
+                    best_score    = score
+                    best_origin   = origin
+                    best_rotation = rotation
+        return (best_origin, best_rotation)
+            
+        
     def update(self):
+        self
 
 class Game:
 

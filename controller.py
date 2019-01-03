@@ -37,7 +37,7 @@ class Input(ctypes.Structure):
 class Controller:
     def __init__(self):
         # Key scan code constants
-        self.SELECT = 0x36 # DIK_RSHIFT
+        self.SELECT = 0x36 # DIK_RSHIFT, Shift on main keyboard
         self.START  = 0x1C # DIK_RETURN, Enter on main keyboard
         self.LEFT   = 0xCB # DIK_LEFT, LeftArrow on arrow keypad
         self.RIGHT  = 0xCD # DIK_RIGHT, RightArrow on arrow keypad
@@ -60,7 +60,7 @@ class Controller:
         x = Input( ctypes.c_ulong(1), ii_ )
         ctypes.windll.user32.SendInput(1, ctypes.pointer(x), ctypes.sizeof(x))
 
-    ## Public controller API
+    ## Simplified public controller API
     def press_start(self):
         self.__press_key(self.START)
 
