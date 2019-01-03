@@ -1,0 +1,4 @@
+# Exclude VSCode code workspace file and __pycache__
+
+tetrisai.code-workspace
+__pycache__
