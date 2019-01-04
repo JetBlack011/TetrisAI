@@ -1,7 +1,6 @@
 import cv2
 from PIL import ImageGrab
 import numpy as np
-import time
 
 class Vision:
     def __init__(self):
@@ -62,8 +61,6 @@ class Vision:
             self.templates[name],
             threshold
         )
-    
-        
 
     def scaled_find_template(self, name, image=None, threshold=0.9, scales=[1.0, 0.9, 1.1]):
         if image is None:
@@ -83,3 +80,12 @@ class Vision:
             if np.shape(matches)[1] >= 1:
                 return matches
         return matches
+    
+    ## Game specific functions
+    def can_see_object(self, template, threshold=0.9):
+        matches = self.find_template(template, threshold=threshold)
+        return np.shape(matches)[1] >= 1
+        
+    ## On Event functions
+    def on_choose_level(self):
+        return self.can_see_object("level")
