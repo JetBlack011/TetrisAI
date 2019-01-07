@@ -3,9 +3,13 @@ from PIL import ImageGrab
 import numpy as np
 
 class Vision:
+
     def __init__(self):
         self.static_templates = {
-            'level': 'assets/level.png',
+            'start': 'assets/start.png',
+            'game_type': 'assets/game_type.png',
+            'level': 'assets/name.png',
+            'playing': 'assets/playing.png',
             'I': 'assets/I.png',
             'J': 'assets/J.png',
             'L': 'assets/L.png',
@@ -22,7 +26,10 @@ class Vision:
             'nextZ': 'assets/next/Z.png'
         }
 
-        self.templates = { k: cv2.imread(v, 0) for (k, v) in self.static_templates.items() }
+        self.templates = {k: cv2.imread(v, 0) for (k, v) in self.static_templates.items()}
+
+        self.current_templates = ['I', 'J', 'L', 'O', 'S', 'T', 'Z']
+        self.next_templates = ['nextI', 'nextJ', 'nextL', 'nextO', 'nextS', 'nextT', 'nextZ']
 
         self.width = 1400
         self.height = 1050
@@ -80,12 +87,33 @@ class Vision:
             if np.shape(matches)[1] >= 1:
                 return matches
         return matches
-    
-    ## Game specific functions
+
     def can_see_object(self, template, threshold=0.9):
         matches = self.find_template(template, threshold=threshold)
         return np.shape(matches)[1] >= 1
+    
+    ## Game specific functions
+    def current_piece(self):
+        for template in self.current_templates:
+            if self.can_see_object(template):
+                return template
+        return None
         
+    def next_piece(self):
+        for template in self.next_templates:
+            if self.can_see_object(template):
+                return (template[-1])
+        return None
+
     ## On Event functions
+    def on_playing(self):
+        return self.can_see_object("playing")
+
+    def on_start(self):
+        return self.can_see_object("start")
+    
+    def on_choose_game_type(self):
+        return self.can_see_object("game_type")
+
     def on_choose_level(self):
         return self.can_see_object("level")

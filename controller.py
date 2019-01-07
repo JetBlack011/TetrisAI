@@ -1,6 +1,7 @@
 # Scan code reference http://www.gamespp.com/directx/directInputKeyboardScanCodes.html
 import ctypes
 import pyautogui
+from time import sleep
 
 # C struct redefinitions
 PUL = ctypes.POINTER(ctypes.c_ulong)
@@ -39,11 +40,14 @@ class Controller:
         # Key scan code constants
         self.SELECT = 0x36 # DIK_RSHIFT, Shift on main keyboard
         self.START  = 0x1C # DIK_RETURN, Enter on main keyboard
-        self.LEFT   = 0xCB # DIK_LEFT, LeftArrow on arrow keypad
-        self.RIGHT  = 0xCD # DIK_RIGHT, RightArrow on arrow keypad
-        self.DOWN   = 0xD0 # DIK_DOWN, DownArrow on arrow keypad
-        self.A      = 0x34 # DIK_PERIOD
-        self.B      = 0x1E # DIK_COMMA
+        self.UP     = 0x11 # DIK_W
+        self.LEFT   = 0x1E # DIK_A
+        self.RIGHT  = 0x20 # DIK_S
+        self.DOWN   = 0x1F # DIK_D
+        self.A      = 0x2C # DIK_PERIOD
+        self.B      = 0x2D # DIK_COMMA
+
+        self.KEY_RATE = 0.1
 
     ## Private actuals functions
     def __press_key(self, hexKeyCode):
@@ -63,9 +67,23 @@ class Controller:
     ## Simplified public controller API
     def press_start(self):
         self.__press_key(self.START)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.START)
 
     def press_select(self):
         self.__press_key(self.SELECT)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.SELECT)
+
+    def press_up(self):
+        self.__press_key(self.UP)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.DOWN)
+
+    def press_down(self):
+        self.__press_key(self.DOWN)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.DOWN)
 
     def hold_down(self):
         self.__press_key(self.DOWN)
@@ -75,15 +93,23 @@ class Controller:
 
     def press_left(self):
         self.__press_key(self.LEFT)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.LEFT)
 
     def press_right(self):
         self.__press_key(self.RIGHT)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.RIGHT)
 
     def rotate_cw(self):
         self.__press_key(self.A)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.A)
 
     def rotate_ccw(self):
         self.__press_key(self.B)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.B)
 
     def click_screen(self):
         pyautogui.moveTo(70, 70)
