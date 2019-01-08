@@ -87,29 +87,35 @@ class Controller:
 
     def hold_down(self):
         self.__press_key(self.DOWN)
+        sleep(self.KEY_RATE)
 
     def release_down(self):
         self.__release_key(self.DOWN)
+        sleep(self.KEY_RATE)
 
     def press_left(self):
         self.__press_key(self.LEFT)
         sleep(self.KEY_RATE)
         self.__release_key(self.LEFT)
+        sleep(self.KEY_RATE)
 
     def press_right(self):
         self.__press_key(self.RIGHT)
         sleep(self.KEY_RATE)
         self.__release_key(self.RIGHT)
+        sleep(self.KEY_RATE)
 
     def rotate_cw(self):
-        self.__press_key(self.A)
-        sleep(self.KEY_RATE)
-        self.__release_key(self.A)
-
-    def rotate_ccw(self):
         self.__press_key(self.B)
         sleep(self.KEY_RATE)
         self.__release_key(self.B)
+        sleep(self.KEY_RATE)
+
+    def rotate_ccw(self):
+        self.__press_key(self.A)
+        sleep(self.KEY_RATE)
+        self.__release_key(self.A)
+        sleep(self.KEY_RATE)
 
     def click_screen(self):
         pyautogui.moveTo(70, 70)

@@ -2,7 +2,7 @@ import numpy as np
 
 class Grid:
 
-    def __init__(self, width=10, height=20):
+    def __init__(self, width=11, height=20):
         self.width = width
         self.height = height
 
@@ -14,8 +14,8 @@ class Grid:
             "O" : np.array([[1, 1],
                             [1, 1]]),
 
-            "T" : np.array([[0, 1, 0],
-                            [1, 1, 1]]),
+            "T" : np.array([[1, 1, 1],
+                            [0, 1, 0]]),
 
             "S" : np.array([[0, 1, 1],
                             [1, 1, 0]]),
@@ -23,18 +23,25 @@ class Grid:
             "Z" : np.array([[1, 1, 0],
                             [0, 1, 1]]),
 
-            "L" : np.array([[1, 0],
-                            [1, 0],
-                            [1, 1]]),
+            "L" : np.array([[1, 1, 1],
+                            [1, 0, 0]]),
 
-            "J" : np.array([[0, 1],
-                            [0, 1],
-                            [1, 1]])
+            "J" : np.array([[1, 1, 1],
+                            [0, 0, 1]])
         }
 
         self.previous_state = None
         self.current_piece = None
         self.next_piece = None
+    
+    def get_piece_start(self, rotation):
+        piece = self.pieces[self.current_piece]
+        rotated_piece = piece
+        for _ in range(rotation):
+            rotated_piece = np.rot90(piece)
+        location = 4 if not self.current_piece is "I" else 3
+        location += piece.shape[1] - rotated_piece.shape[1]
+        return location
 
     def revert_state(self):
         self.grid = self.previous_state
@@ -45,9 +52,15 @@ class Grid:
         """Determines the number of completed lines on the grid"""
         lines = 0
         for row in self.grid:
-            if len(np.where(row == 1)[0]) == 10:
+            if len(np.where(row == 1)[0]) == self.width - 1:
                 lines += 1
         return lines
+    
+    def clear_lines(self):
+        for index, row in enumerate(self.grid):
+            if len(np.where(row == 1)[0]) == self.width - 1:
+                row.fill(0)
+            np.roll(self.grid[:index + 1, :], self.width)
 
     def column_height(self, column):
         """Finds the row of the topmost mino in a given column"""
@@ -57,7 +70,7 @@ class Grid:
     def aggregate_height(self):
         height = 0
         for column in range(self.width):
-            height += self.column_holes(column)
+            height += self.column_height(column)
         return height
 
     def column_holes(self, column):
@@ -69,7 +82,7 @@ class Grid:
         for column in range(self.width):
             holes += self.column_holes(column)
         return holes
-    
+
     def bumpiness(self):
         total = 0
         for column in range(self.width):
@@ -134,5 +147,7 @@ class Grid:
         for point in ones_location:
             self.grid[point[0]][point[1]] = 1
         
+        self.clear_lines()
+
     def __str__(self):
         return str(self.grid)

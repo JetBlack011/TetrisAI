@@ -1,7 +1,7 @@
+import time
 import pyautogui
 import numpy as np
 from vision import Vision
-from time import sleep
 from grid import Grid
 
 class AI:
@@ -20,7 +20,7 @@ class AI:
         bumpiness_weight : float
             Weight for bumpiness of the grid (negated)
     """
-    def __init__(self, vision, controller, height_weight, lines_weight, holes_weight, bumpiness_weight, starting_level=0, show_window=False):
+    def __init__(self, vision, controller, height_weight, lines_weight, holes_weight, bumpiness_weight, starting_level=0):
         self.vision = vision
         self.controller = controller
 
@@ -30,8 +30,7 @@ class AI:
         self.holes_weight = -holes_weight
         self.bumpiness_weight = -bumpiness_weight
 
-        # Configurable options
-        self.show_window = show_window
+        # Configurable game options
         self.starting_level = starting_level
 
         self.grid = Grid()
@@ -40,19 +39,22 @@ class AI:
         """Main game loop; play until told to stop"""
 
         self.controller.click_screen()
-        self.controller.hold_down()
-        sleep(5)
-        self.controller.release_down()
 
-        """
-        self.update()
-        #print("On Start: {}, On Game Type: {}, On Level: {}, Playing: {}".format(self.vision.on_start(), self.vision.on_choose_game_type(), self.vision.on_choose_level(), self.vision.on_playing()))
+        if self.vision.on_playing():
+            print("[+] Resetting game")
+            self.reset_game()
         
-        #print("[+] Resetting field")
-        #self.reset_field()
+        self.vision.update()
+        
+        if self.vision.on_game_over():
+            print("[+] Game over! Restarting...")
+            self.controller.press_start()
+            time.sleep(1)
+
+        self.vision.update()
 
         while not self.vision.on_playing():
-            self.update()             
+            self.vision.update()
             if self.vision.on_start():
                 print("[+] Pressing start")
                 self.controller.press_start()
@@ -63,51 +65,63 @@ class AI:
             
             if self.vision.on_choose_level():
                 print("[+] Choosing level " + str(self.starting_level))
-                for _ in range(4):
+                for _ in range(9):
                     self.controller.press_left()
-                self.controller.press_up()
+                for _ in range(self.starting_level):
+                    self.controller.press_right()
                 self.controller.press_start()
 
         while self.vision.on_playing():
-            self.update()
+            self.vision.update()
 
             if self.grid.current_piece == None:
                 self.grid.current_piece = self.vision.current_piece()
             else:
-                self.grid.current_piece = self.grid.next_piece()
+                self.grid.current_piece = self.grid.next_piece
 
             self.grid.next_piece = self.vision.next_piece()
 
             origin, rotation = self.best_move()
-
-            print("Current Piece: {}, Next Piece: {}\nBest Origin: {}, Best Rotation: {}".format(self.grid.current_piece, self.grid.next_piece, origin, rotation))
-            print(self.grid)
-
-            for _ in range(10):
-                self.controller.press_left()
-
-            for _ in range(origin):
-                self.controller.press_right()
             
             for _ in range(rotation):
                 self.controller.rotate_ccw()
-            
-            while self.vision.next_piece() != None:
-                self.controller.hold_down()
-            while self.vision.next_piece() == None:
-                self.controller.hold_down()
-
-            self.controller.release_down()
-            self.grid.drop(self.grid.current_piece, origin, rotation)
-        """
-
                 
-    # def reset_field(self):
-    #     while self.vision.on_playing():
-    #         self.update()
-    #         self.controller.hold_down()
-    #         self.controller.press_start()
-    #         self.controller.release_down()
+            location = self.grid.get_piece_start(rotation)
+
+            if origin <= location:
+                for _ in range(abs(location - origin)):
+                    self.controller.press_left()
+                    print("Left")
+            else:
+                for _ in range(abs(location - origin) + 1):
+                    self.controller.press_right()
+                    print("Right")
+            
+            self.vision.update_stats()
+            while not self.vision.is_block_down():
+                self.controller.hold_down()
+            self.controller.release_down()
+
+            self.grid.drop(self.grid.current_piece, origin, rotation)
+            print(self.grid)
+            print("Current Piece: {}, Next Piece: {}\nBest Origin: {}, Best Rotation: {}".format(self.grid.current_piece, self.grid.next_piece, origin, rotation))
+            print("Location: {}".format(location))
+
+    def drop_block(self):
+        start = time.time()
+        elapsed_time = 0
+        self.vision.update_stats()
+        self.controller.release_down()
+        while not self.vision.is_block_down() and elapsed_time < 3:
+            self.controller.hold_down()
+            elapsed_time = time.time() - start
+        self.controller.release_down()
+
+    def reset_game(self):
+        while not self.vision.on_game_over():
+            self.controller.rotate_cw()
+            self.drop_block()
+            self.vision.update()
                 
     def score(self):
         """
@@ -123,7 +137,7 @@ class AI:
         """Determine the optimal move given a particular game state"""
         piece = self.grid.current_piece
 
-        best_score = -10
+        best_score = -1000000
         best_origin = 0
         best_rotation = 0
         best_piece = None
@@ -140,11 +154,4 @@ class AI:
                     best_origin = origin
                     best_rotation = rotation
                     best_piece = piece
-
         return (best_origin, best_rotation)
-    
-    def update(self):
-        self.vision.refresh_frame()
-
-        if self.show_window:
-            self.vision.display_frame()
