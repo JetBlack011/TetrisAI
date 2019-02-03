@@ -29,7 +29,8 @@ Current Piece: I, Next Piece: T
 Best Origin: 0, Best Rotation: 1
 ```
 The method for completing a simulated drop works by calculating the distance from the lowest occupied space in a predefined constant ndarray of the Tetromino to the tallest column, then overlaying the two matrices, preserving the already-occupied spaces on the grid.
-```[[1, 1, 1],
+```
+[[1, 1, 1],
 [0, 1, 0]]
 ```
 This was likely the most difficult to implement portion of this project and is, somewhat ironically, the only portion that functions correctly consistently. The "scoring" function, used to determine the optimal move based off of the current game state, loops through each possible origin and rotation for the current Tetromino and calculates its respective score using the simulation, which, afterwards, has its state reverted to the optimal drop. From a retrospective paradigm, everything should function fairly smoothly, however, the main issue resides in both the algorithm itself and the movement algorithm.
