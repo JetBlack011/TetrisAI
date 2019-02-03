@@ -1,8 +1,8 @@
 import time
 import pyautogui
 import numpy as np
-from vision import Vision
 from grid import Grid
+from piece import PIECE_SET
 
 class AI:
     """
@@ -74,40 +74,33 @@ class AI:
         while self.vision.on_playing():
             self.vision.update()
 
-            if self.grid.current_piece == None:
-                self.grid.current_piece = self.vision.current_piece()
+            if self.grid.current_piece is None:
+                self.grid.current_piece = PIECE_SET[self.vision.current_piece()]
             else:
                 self.grid.current_piece = self.grid.next_piece
 
-            self.grid.next_piece = self.vision.next_piece()
+            self.grid.next_piece = PIECE_SET[self.vision.next_piece()]
 
             origin, rotation = self.best_move()
-            
+
             for _ in range(rotation):
                 self.controller.rotate_ccw()
-                
-            location = self.grid.get_piece_start(rotation)
-
-            if origin <= location:
-                for _ in range(abs(location - origin)):
-                    self.controller.press_left()
-                    print("Left")
-            else:
-                for _ in range(abs(location - origin) + 1):
-                    self.controller.press_right()
-                    print("Right")
+            
+            for _ in range(4):
+                self.controller.press_left()
+            
+            for _ in range(origin):
+                self.controller.press_right()
             
             self.vision.update_stats()
-            while not self.vision.is_block_down():
-                self.controller.hold_down()
-            self.controller.release_down()
+            self.hard_drop()
 
             self.grid.drop(self.grid.current_piece, origin, rotation)
+            self.grid.clear_lines()
             print(self.grid)
             print("Current Piece: {}, Next Piece: {}\nBest Origin: {}, Best Rotation: {}".format(self.grid.current_piece, self.grid.next_piece, origin, rotation))
-            print("Location: {}".format(location))
 
-    def drop_block(self):
+    def hard_drop(self):
         start = time.time()
         elapsed_time = 0
         self.vision.update_stats()
@@ -120,7 +113,7 @@ class AI:
     def reset_game(self):
         while not self.vision.on_game_over():
             self.controller.rotate_cw()
-            self.drop_block()
+            self.hard_drop()
             self.vision.update()
                 
     def score(self):
@@ -137,21 +130,20 @@ class AI:
         """Determine the optimal move given a particular game state"""
         piece = self.grid.current_piece
 
-        best_score = -1000000
+        best_score = None
         best_origin = 0
         best_rotation = 0
-        best_piece = None
-        for rotation in range(5):
-            _piece = self.grid.pieces[piece]
-            for _ in range(rotation):
-                _piece = np.rot90(_piece)
-            for origin in range(self.grid.width - _piece.shape[1]):
+        for origin in range(piece.max_origin()):
+            for rotation in range(piece.max_rotation + 1):
                 self.grid.drop(piece, origin, rotation)
                 score = self.score()
                 self.grid.revert_state()
-                if score > best_score:
+
+                if best_score is None:
+                    best_score = score
+                elif score > best_score:
                     best_score = score
                     best_origin = origin
                     best_rotation = rotation
-                    best_piece = piece
+
         return (best_origin, best_rotation)
